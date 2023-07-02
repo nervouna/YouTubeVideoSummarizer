@@ -16,6 +16,8 @@ Note that the script currently only works with videos with transcripts/captions.
 
 ## Usage
 
+> **Note**: Downloading and transcribing the video file is a time-consuming process. It may take a few minutes to complete. Use the `-t` parameter only when the default method fails.
+
 Rename the `example.env` to `.env` and fill in the varialbes.
 
 ```bash
@@ -24,6 +26,9 @@ pip install -r requirements.txt
 
 # Basic usage:
 python main.py https://www.youtube.com/watch?v=w-X_EQ2Xva4
+
+# Using whisper:
+python main.py https://www.youtube.com/watch?v=w-X_EQ2Xva4 -t
 
 # Output only the summary (in case you need to use it in a pipeline):
 python main.py https://www.youtube.com/watch?v=w-X_EQ2Xva4 --quiet
@@ -40,8 +45,7 @@ python main.py https://www.youtube.com/watch?v=w-X_EQ2Xva4 --translate-to Japane
 - [x] Get video transcripts
 - [x] Summarize transcripts
 - [x] Split long transcripts if exceeds token limit
-- [ ] Download video and convert into audio file
-- [ ] Transcribe the audio file and summarize it
+- [x] Download video, transcribe the video file and summarize it
 
 ## License
 
