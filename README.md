@@ -31,7 +31,8 @@ python main.py https://www.youtube.com/watch?v=w-X_EQ2Xva4
 python main.py https://www.youtube.com/watch?v=w-X_EQ2Xva4 -t
 
 # Output only the summary (in case you need to use it in a pipeline):
-python main.py https://www.youtube.com/watch?v=w-X_EQ2Xva4 --quiet
+# For example, you can pipe the output to a text-to-speech program:
+python main.py https://www.youtube.com/watch?v=w-X_EQ2Xva4 -q | say
 
 # With Azure OpenAI API (remember to set the variables in .env):
 python main.py https://www.youtube.com/watch?v=w-X_EQ2Xva4 --azure
