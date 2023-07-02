@@ -1,6 +1,7 @@
 import os
 import openai
 import tiktoken
+import logging
 
 from dotenv import load_dotenv
 from tqdm import tqdm
@@ -80,11 +81,12 @@ def _assemble_prompt(chunk: str, translate_to: str) -> dict:
     Assemble the prompt for the GPT-3 model
     """
     prompt = "Provide a concise summary of the video transcript " + \
-        "while maintaining accuracy and encouraging creativity in the response." + \
-        "\n\nTranscription:\n\n{}"
+        "while maintaining accuracy and encouraging creativity in the response. "
 
     if translate_to:
-        prompt += f"\n\nTranslate the summary into {translate_to}."
+        prompt += f"\n\nThe summary should written in {translate_to}."
+
+    prompt += "\n\nTranscription:\n\n{}\n\nSummary:\n\n"
 
     return {"role": "user", "content": prompt.format(chunk)}
 
@@ -114,26 +116,13 @@ def _openai_completion(model, message):
     return response
 
 
-def _completion_with_progress_bar(translate_to, azure, deployment_id, chunks, summaries, tokens):
-    for chunk in tqdm(chunks):
-        message = _assemble_prompt(chunk, translate_to=translate_to)
-        if azure:
-            response = _azure_completion(deployment_id, message)
-        else:
-            response = _openai_completion(_GPT_MODEL, message)
-        summaries.append(response.choices[0].message.content)
-        tokens += response.usage.total_tokens
-
-
-def _completion(translate_to, azure, deployment_id, chunks, summaries, tokens):
-    for chunk in chunks:
-        message = _assemble_prompt(chunk, translate_to=translate_to)
-        if azure:
-            response = _azure_completion(deployment_id, message)
-        else:
-            response = _openai_completion(_GPT_MODEL, message)
-        summaries.append(response.choices[0].message.content)
-        tokens += response.usage.total_tokens
+def _get_completion(translate_to, azure, deployment_id, chunk):
+    message = _assemble_prompt(chunk, translate_to=translate_to)
+    if azure:
+        response = _azure_completion(deployment_id, message)
+    else:
+        response = _openai_completion(_GPT_MODEL, message)
+    return response
 
 
 def summarize(text: str, translate_to: str, azure: bool,
@@ -152,21 +141,25 @@ def summarize(text: str, translate_to: str, azure: bool,
     tokens = 0
 
     if quiet:
-        _completion(translate_to, azure, deployment_id,
-                    chunks, summaries, tokens)
+        for chunk in chunks:
+            response = _get_completion(
+                translate_to, azure, deployment_id, chunk)
+            summaries.append(response.choices[0].message.content)
     else:
-        print(f"Starting summarization round {summarize_round}...")
-        print()
-        _completion_with_progress_bar(
-            translate_to, azure, deployment_id, chunks, summaries, tokens)
-        print(f"Round {summarize_round} complete, used {tokens} tokens.")
-        print()
+        logging.info(f"Starting summarization round {summarize_round}...")
+        for chunk in tqdm(chunks):
+            response = _get_completion(
+                translate_to, azure, deployment_id, chunk)
+            summaries.append(response.choices[0].message.content)
+            tokens += response.usage.total_tokens
+        logging.info(
+            f"Round {summarize_round} complete, used {tokens} tokens.")
 
     recursion -= 1
     summary_str = "\n".join(summaries)
 
     if len(summaries) > 1 and recursion > 0:
         return summarize(summary_str, azure=azure,
-                         translate_to=translate_to, recursion=recursion)
+                         translate_to=translate_to, recursion=recursion, quiet=quiet)
     else:
         return summary_str

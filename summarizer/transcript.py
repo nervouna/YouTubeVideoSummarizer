@@ -1,4 +1,4 @@
-
+import logging
 import urllib.parse
 from youtube_transcript_api import YouTubeTranscriptApi
 
@@ -16,6 +16,7 @@ def _get_youtube_transcript_from_url(url: str, languages: list[str]) -> dict:
     Get the transcript from the video URL
     """
     video_id = _get_youtube_video_id(url)
+    logging.info(f"Getting transcript for video ID {video_id}")
     return YouTubeTranscriptApi.get_transcript(video_id, languages=languages)
 
 
