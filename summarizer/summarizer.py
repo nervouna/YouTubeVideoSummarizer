@@ -165,12 +165,8 @@ def summarize(text: str, translate_to: str, azure: bool,
     recursion -= 1
     summary_str = "\n".join(summaries)
 
-    if recursion == 0:
-        return summary_str
-
-    elif len(summaries) > 1:
+    if len(summaries) > 1 and recursion > 0:
         return summarize(summary_str, azure=azure,
                          translate_to=translate_to, recursion=recursion)
-
     else:
-        return summaries[0]
+        return summary_str
